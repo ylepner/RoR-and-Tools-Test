@@ -1,0 +1,50 @@
+{
+  "name": "Rails 8 API",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "features": {
+    "ghcr.io/devcontainers/features/common-utils:2": {
+      "username": "vscode",
+      "userUid": 1001,
+      "userGid": 1001,
+      "installZsh": true,
+      "installOhMyZsh": true,
+      "configureZshAsDefaultShell": true,
+      "upgradePackages": true
+    },
+    "ghcr.io/rocker-org/devcontainer-features/apt-packages:1": {
+      "packages": "libpq-dev"
+    },
+    "ghcr.io/devcontainers/features/ruby:1": {}
+  },
+
+  // Configure tool-specific properties.
+  "customizations": {
+    "vscode": {
+      "extensions": ["Shopify.ruby-lsp", "EditorConfig.EditorConfig"]
+    }
+  },
+
+  // Use 'forwardPorts' to make a list of ports inside the container available locally.
+  // This can be used to network with other containers or the host.
+  "forwardPorts": [3000, 5434, 6380],
+  "portsAttributes": {
+    "3000": {
+      "label": "Rails"
+    },
+    "5434": {
+      "label": "Postgres"
+    },
+    "6380": {
+      "label": "Redis"
+    }
+  },
+
+  "postStartCommand": "git config --global --add safe.directory ${containerWorkspaceFolder}",
+
+  // Use 'postCreateCommand' to run commands after the container is created.
+  // "postCreateCommand": ".devcontainer/boot.sh",
+
+  "remoteUser": "vscode"
+}
