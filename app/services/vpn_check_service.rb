@@ -3,7 +3,6 @@ require "json"
 
 class VpnCheckService
   API_URL = "https://vpnapi.io/api/".freeze
-  API_KEY = ENV.fetch("VPN_API_KEY") { raise "VPN_API_KEY is not set" }
 
   def initialize(ip)
     @ip = ip
@@ -30,10 +29,14 @@ class VpnCheckService
   end
 
   def fetch_from_api
-    uri = URI("#{API_URL}#{@ip}?key=#{API_KEY}")
+    uri = URI("#{API_URL}#{@ip}?key=#{api_key}")
     res = Net::HTTP.get_response(uri)
 
     JSON.parse(res.body)
+  end
+
+  def api_key
+    ENV.fetch("VPN_API_KEY") { raise "VPN_API_KEY is not set" }
   end
 
   def fallback
