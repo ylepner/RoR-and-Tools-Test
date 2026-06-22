@@ -4,6 +4,9 @@ RSpec.describe "V1::UserChecks", type: :request do
   describe "POST /v1/user/check_status" do
     before do
       allow(REDIS).to receive(:sismember).and_return(true)
+
+      vpn_service = instance_double(VpnCheckService, call: { "security" => { "vpn" => false, "tor" => false } })
+      allow(VpnCheckService).to receive(:new).and_return(vpn_service)
     end
 
     let(:idfa) { SecureRandom.uuid }

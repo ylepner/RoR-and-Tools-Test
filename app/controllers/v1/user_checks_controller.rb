@@ -5,6 +5,7 @@ class V1::UserChecksController < ApplicationController
     service = UserCheckService.new(
       user: user,
       country: request.headers["CF-IPCountry"],
+      ip: request.headers["CF-Connecting-IP"] || request.remote_ip,
       rooted_device: check_params[:rooted_device]
     )
 
