@@ -2,6 +2,10 @@ require 'rails_helper'
 
 RSpec.describe "V1::UserChecks", type: :request do
   describe "POST /v1/user/check_status" do
+    before do
+      allow(REDIS).to receive(:sismember).and_return(true)
+    end
+
     let(:idfa) { SecureRandom.uuid }
 
     let(:request_body) do
@@ -42,6 +46,16 @@ RSpec.describe "V1::UserChecks", type: :request do
       expect(User.find_by(idfa: rooted_request_body[:idfa])&.ban_status).to eq("banned")
     end
 
+    it "returns not_banned for an existing not_banned user" do
+      existing_user = User.create!(idfa: request_body[:idfa], ban_status: :not_banned)
+
+      post "/v1/user/check_status", params: request_body, headers: request_headers, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to eq("ban_status" => "not_banned")
+      expect(existing_user.reload.ban_status).to eq("not_banned")
+    end
+
     it "returns banned for an existing banned user" do
       existing_user = User.create!(idfa: request_body[:idfa], ban_status: :banned)
 
@@ -50,6 +64,23 @@ RSpec.describe "V1::UserChecks", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)).to eq("ban_status" => "banned")
       expect(existing_user.reload.ban_status).to eq("banned")
+    end
+
+    it "returns banned when country is not in whitelist" do
+      allow(REDIS).to receive(:sismember).with("country_whitelist", "US").and_return(false)
+
+      post "/v1/user/check_status", params: request_body, headers: request_headers, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to eq("ban_status" => "banned")
+      expect(User.find_by(idfa: request_body[:idfa])&.ban_status).to eq("banned")
+    end
+
+    it "returns banned when country header is missing" do
+      post "/v1/user/check_status", params: request_body, as: :json
+
+      expect(response).to have_http_status(:ok)
+      expect(JSON.parse(response.body)).to eq("ban_status" => "banned")
     end
   end
 end

@@ -19,7 +19,9 @@ class UserCheckService
   private
 
   def country_allowed?
-    # Redis.current.sismember("country_whitelist", @country)
-    true
+    country = @country.to_s.strip.upcase
+    return false if country.empty?
+
+    REDIS.sismember("country_whitelist", country)
   end
 end
