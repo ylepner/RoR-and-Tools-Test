@@ -1,16 +1,16 @@
 class UserCheckService
-  def initialize(user:, country:, ip:, rooted_device:)
+  def initialize(user:, country:, rooted_device:, vpn:)
     @user = user
     @country = country
-    @ip = ip
     @rooted_device = ActiveModel::Type::Boolean.new.cast(rooted_device)
+    @vpn = vpn
   end
 
   def call
     return :banned if @user&.banned?
     return :banned unless country_allowed?
     return :banned if @rooted_device
-    return :banned if vpn_or_tor?
+    return :banned if @vpn
 
     :not_banned
   end
@@ -22,10 +22,5 @@ class UserCheckService
     return false if country.empty?
 
     REDIS.sismember("country_whitelist", country)
-  end
-
-  def vpn_or_tor?
-    result = VpnCheckService.new(@ip).call
-    result["security"]["vpn"] || result["security"]["tor"]
   end
 end

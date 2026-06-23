@@ -10,9 +10,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2026_06_19_174742) do
+ActiveRecord::Schema[8.1].define(version: 2026_06_23_130934) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "pg_catalog.plpgsql"
+
+  create_table "integrity_logs", force: :cascade do |t|
+    t.integer "ban_status"
+    t.string "country"
+    t.datetime "created_at", null: false
+    t.string "idfa"
+    t.string "ip"
+    t.boolean "proxy"
+    t.boolean "rooted_device"
+    t.datetime "updated_at", null: false
+    t.boolean "vpn"
+  end
 
   create_table "users", force: :cascade do |t|
     t.integer "ban_status", default: 0, null: false
