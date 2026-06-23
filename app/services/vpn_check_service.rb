@@ -29,8 +29,14 @@ class VpnCheckService
   end
 
   def fetch_from_api
-    uri = URI("#{API_URL}#{@ip}?key=#{api_key}")
-    res = Net::HTTP.get_response(uri)
+    uri = URI("#{API_URL}#{@ip}")
+    uri.query = URI.encode_www_form(key: api_key)
+
+    res = Net::HTTP.start(uri.host, uri.port, use_ssl: true, open_timeout: 2, read_timeout: 2) do |http|
+      http.get(uri.request_uri)
+    end
+
+    raise "Vpn API request failed: #{res.code}" unless res.is_a?(Net::HTTPSuccess)
 
     JSON.parse(res.body)
   end
