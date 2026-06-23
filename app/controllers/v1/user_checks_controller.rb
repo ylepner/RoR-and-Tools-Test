@@ -1,9 +1,12 @@
 class V1::UserChecksController < ApplicationController
   def create
-    user = User.find_by(idfa: check_params[:idfa])
+    idfa = check_params[:idfa].to_s.strip
+    return render(json: { error: "idfa is required" }, status: :bad_request) if idfa.empty?
+
+    user = User.find_by(idfa: idfa)
     was_new = user.nil?
 
-    user ||= User.new(idfa: check_params[:idfa])
+    user ||= User.new(idfa: idfa)
 
     old_status = user&.ban_status
 

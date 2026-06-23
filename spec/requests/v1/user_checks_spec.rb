@@ -118,5 +118,19 @@ RSpec.describe "V1::UserChecks", type: :request do
       expect(response).to have_http_status(:ok)
       expect(JSON.parse(response.body)).to eq("ban_status" => "banned")
     end
+
+    it "returns 400 when idfa is missing" do
+      post "/v1/user/check_status", params: { rooted_device: false }, headers: request_headers, as: :json
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)).to eq("error" => "idfa is required")
+    end
+
+    it "returns 400 when idfa is blank" do
+      post "/v1/user/check_status", params: { idfa: "", rooted_device: false }, headers: request_headers, as: :json
+
+      expect(response).to have_http_status(:bad_request)
+      expect(JSON.parse(response.body)).to eq("error" => "idfa is required")
+    end
   end
 end
