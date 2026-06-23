@@ -58,5 +58,35 @@ RSpec.describe IntegrityLogger do
         expect(log.proxy).to eq(true)
       end
     end
+
+    context "with a custom adapter" do
+      let(:adapter) { instance_double(IntegrityLogAdapter) }
+
+      subject(:logger_call) do
+        described_class.new(
+          user: user,
+          ip: ip,
+          country: country,
+          rooted_device: rooted_device,
+          vpn: vpn,
+          proxy: proxy,
+          adapter: adapter
+        ).call
+      end
+
+      it "delegates create to the adapter" do
+        expect(adapter).to receive(:create).with(
+          idfa: user.idfa,
+          ban_status: "not_banned",
+          ip: ip,
+          country: country,
+          rooted_device: rooted_device,
+          vpn: vpn,
+          proxy: proxy
+        )
+
+        logger_call
+      end
+    end
   end
 end
