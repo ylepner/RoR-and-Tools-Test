@@ -15,8 +15,9 @@ class V1::UserChecksController < ApplicationController
     rooted_device = check_params[:rooted_device]
 
     vpn_result = VpnCheckService.new(ip).call
-    vpn = vpn_result["security"]["vpn"] || vpn_result["security"]["tor"]
-    proxy = vpn_result["security"]["proxy"]
+    security = (vpn_result.is_a?(Hash) && vpn_result["security"].is_a?(Hash)) ? vpn_result["security"] : {}
+    vpn = !!(security["vpn"] || security["tor"])
+    proxy = !!security["proxy"]
 
     service = UserCheckService.new(
       user: user,
