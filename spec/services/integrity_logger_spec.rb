@@ -2,7 +2,7 @@ require 'rails_helper'
 
 RSpec.describe IntegrityLogger do
   describe "#call" do
-    let(:user) { User.create!(idfa: SecureRandom.uuid, ban_status: :not_banned) }
+    let(:user) { create(:user) }
     let(:ip) { "192.168.1.1" }
     let(:country) { "US" }
     let(:rooted_device) { false }
@@ -37,7 +37,7 @@ RSpec.describe IntegrityLogger do
     end
 
     context "when user is banned" do
-      let(:user) { User.create!(idfa: SecureRandom.uuid, ban_status: :banned) }
+      let(:user) { create(:user, ban_status: :banned) }
 
       it "saves banned status" do
         log = logger_call
@@ -46,7 +46,7 @@ RSpec.describe IntegrityLogger do
     end
 
     context "with banned user and vpn is true" do
-      let(:user) { User.create!(idfa: SecureRandom.uuid, ban_status: :banned) }
+      let(:user) { create(:user, ban_status: :banned) }
       let(:vpn) { true }
       let(:proxy) { true }
 

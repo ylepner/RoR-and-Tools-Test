@@ -1,10 +1,10 @@
 FactoryBot.define do
   factory :integrity_log do
-    idfa { "MyString" }
-    ban_status { 1 }
-    ip { "MyString" }
+    idfa { SecureRandom.uuid }
+    ban_status { :not_banned }
+    ip { "127.0.0.1" }
     rooted_device { false }
-    country { "MyString" }
+    country { "US" }
     vpn { false }
     proxy { false }
   end

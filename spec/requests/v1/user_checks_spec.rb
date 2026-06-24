@@ -55,7 +55,7 @@ RSpec.describe "V1::UserChecks", type: :request do
     end
 
     it "creates an integrity log when ban_status changes" do
-      User.create!(idfa: request_body[:idfa], ban_status: :not_banned)
+      create(:user, idfa: request_body[:idfa])
 
       rooted_request_body = request_body.merge(rooted_device: true)
 
@@ -65,7 +65,7 @@ RSpec.describe "V1::UserChecks", type: :request do
     end
 
     it "does not create an integrity log when ban_status is unchanged" do
-      User.create!(idfa: request_body[:idfa], ban_status: :not_banned)
+      create(:user, idfa: request_body[:idfa])
 
       expect do
         post "/v1/user/check_status", params: request_body, headers: request_headers, as: :json
@@ -83,7 +83,7 @@ RSpec.describe "V1::UserChecks", type: :request do
     end
 
     it "returns not_banned for an existing not_banned user" do
-      existing_user = User.create!(idfa: request_body[:idfa], ban_status: :not_banned)
+      existing_user = create(:user, idfa: request_body[:idfa])
 
       post "/v1/user/check_status", params: request_body, headers: request_headers, as: :json
 
@@ -93,7 +93,7 @@ RSpec.describe "V1::UserChecks", type: :request do
     end
 
     it "returns banned for an existing banned user" do
-      existing_user = User.create!(idfa: request_body[:idfa], ban_status: :banned)
+      existing_user = create(:user, idfa: request_body[:idfa], ban_status: :banned)
 
       post "/v1/user/check_status", params: request_body, headers: request_headers, as: :json
 
