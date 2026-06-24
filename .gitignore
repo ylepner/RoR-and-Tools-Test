@@ -31,3 +31,6 @@
 # Ignore key files for decrypting credentials and more.
 /config/*.key
 
+# Ignore AI session summary (developer notes, not project code).
+/AI_SESSION.md
+
