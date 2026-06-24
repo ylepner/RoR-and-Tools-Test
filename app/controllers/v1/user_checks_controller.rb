@@ -1,45 +1,14 @@
 class V1::UserChecksController < ApplicationController
-  def create
+  def check_status
     idfa = check_params[:idfa].to_s.strip
     return render(json: { error: "idfa is required" }, status: :bad_request) if idfa.empty?
 
-    user = User.find_by(idfa: idfa)
-    was_new = user.nil?
-
-    user ||= User.new(idfa: idfa)
-
-    old_status = user&.ban_status
-
-    ip = request.headers["CF-Connecting-IP"] || request.remote_ip
-    country = request.headers["CF-IPCountry"]
-    rooted_device = check_params[:rooted_device]
-
-    vpn_result = VpnCheckService.new(ip).call
-    security = (vpn_result.is_a?(Hash) && vpn_result["security"].is_a?(Hash)) ? vpn_result["security"] : {}
-    vpn = !!(security["vpn"] || security["tor"])
-    proxy = !!security["proxy"]
-
-    service = UserCheckService.new(
-      user: user,
-      country: country,
-      rooted_device: rooted_device,
-      vpn: vpn
-    )
-
-    result = service.call
-
-    user.update!(ban_status: result)
-
-    if was_new || old_status != user.ban_status
-      IntegrityLogger.new(
-        user: user,
-        ip: ip,
-        country: country,
-        rooted_device: rooted_device,
-        vpn: vpn,
-        proxy: proxy
-      ).call
-    end
+    user = UserCheckProcessor.new(
+      idfa: idfa,
+      country: request.headers["CF-IPCountry"],
+      ip: request.headers["CF-Connecting-IP"] || request.remote_ip,
+      rooted_device: check_params[:rooted_device]
+    ).call
 
     render json: { ban_status: user.ban_status }
   end
