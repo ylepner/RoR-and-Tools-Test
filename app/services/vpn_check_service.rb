@@ -46,6 +46,6 @@ class VpnCheckService
   end
 
   def fallback
-    { "security" => { "vpn" => false, "tor" => false } }
+    { "security" => { "vpn" => false, "tor" => false, "proxy" => false } }
   end
 end
