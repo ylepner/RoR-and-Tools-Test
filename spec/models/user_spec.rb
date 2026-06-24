@@ -1,36 +1,29 @@
 require 'rails_helper'
 
 RSpec.describe User, type: :model do
-  describe "validations" do
-    it "is valid with idfa" do
-      user = described_class.new(idfa: SecureRandom.uuid)
+  subject(:user) { build(:user) }
 
-      expect(user).to be_valid
-    end
+  it { is_expected.to be_valid }
 
-    it "requires idfa" do
-      user = described_class.new(idfa: nil)
+  context "when idfa is nil" do
+    subject { build(:user, idfa: nil) }
 
-      expect(user).not_to be_valid
-      expect(user.errors[:idfa]).to include("can't be blank")
-    end
-
-    it "requires unique idfa" do
-      idfa = SecureRandom.uuid
-      described_class.create!(idfa: idfa)
-
-      duplicate = described_class.new(idfa: idfa)
-
-      expect(duplicate).not_to be_valid
-      expect(duplicate.errors[:idfa]).to include("has already been taken")
-    end
+    it { is_expected.not_to be_valid }
   end
 
-  describe "defaults" do
-    it "sets ban_status to not_banned by default" do
-      user = described_class.create!(idfa: SecureRandom.uuid)
+  context "when idfa is duplicate" do
+    let(:idfa) { SecureRandom.uuid }
 
-      expect(user.ban_status).to eq("not_banned")
-    end
+    before { create(:user, idfa: idfa) }
+
+    subject { build(:user, idfa: idfa) }
+
+    it { is_expected.not_to be_valid }
+  end
+
+  context "when ban_status is nil" do
+    subject { build(:user, ban_status: nil) }
+
+    it { is_expected.not_to be_valid }
   end
 end

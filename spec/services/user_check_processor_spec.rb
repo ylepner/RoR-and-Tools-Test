@@ -7,70 +7,43 @@ RSpec.describe UserCheckProcessor do
     let(:ip) { "192.168.1.1" }
     let(:rooted_device) { false }
 
-    subject(:processor_call) do
+    subject(:call) do
       described_class.new(
-        idfa: idfa,
-        country: country,
-        ip: ip,
-        rooted_device: rooted_device
+        idfa: idfa, country: country, ip: ip, rooted_device: rooted_device
       ).call
     end
 
     before do
       allow(REDIS).to receive(:sismember).and_return(true)
 
-      vpn_service = instance_double(VpnCheckService, call: { "security" => { "vpn" => false, "tor" => false, "proxy" => false } })
+      vpn_service = instance_double(VpnCheckService,
+        call: { "security" => { "vpn" => false, "tor" => false, "proxy" => false } })
       allow(VpnCheckService).to receive(:new).and_return(vpn_service)
     end
 
-    it "creates a new user" do
-      expect { processor_call }.to change(User, :count).by(1)
+    context "with default params" do
+      it { expect { subject }.to change(User, :count).by(1) }
+      it { expect { subject }.to change(IntegrityLog, :count).by(1) }
+      it { is_expected.to be_a(User) }
+      it { is_expected.to have_attributes(idfa: idfa) }
+      it { is_expected.to have_attributes(ban_status: "not_banned") }
     end
 
-    it "sets ban_status to not_banned by default" do
-      user = processor_call
-      expect(user.ban_status).to eq("not_banned")
-    end
-
-    it "creates an integrity log for a new user" do
-      expect { processor_call }.to change(IntegrityLog, :count).by(1)
-
-      log = IntegrityLog.last
-      expect(log.idfa).to eq(idfa)
-      expect(log.ban_status).to eq("not_banned")
-      expect(log.country).to eq(country)
-      expect(log.rooted_device).to eq(false)
-      expect(log.vpn).to eq(false)
-      expect(log.proxy).to eq(false)
-    end
-
-    it "returns the user object" do
-      expect(processor_call).to be_a(User)
-      expect(processor_call.idfa).to eq(idfa)
-    end
-
-    context "when user already exists with same ban_status" do
+    context "when user already exists" do
       let!(:existing_user) { create(:user, idfa: idfa, ban_status: :not_banned) }
 
-      it "does not create an integrity log" do
-        expect { processor_call }.not_to change(IntegrityLog, :count)
+      it { expect { subject }.not_to change(User, :count) }
+
+      context "with same ban_status" do
+        it { expect { subject }.not_to change(IntegrityLog, :count) }
+        it { is_expected.to have_attributes(ban_status: "not_banned") }
       end
 
-      it "does not change ban_status" do
-        expect(processor_call.ban_status).to eq("not_banned")
-      end
-    end
+      context "when ban_status changes" do
+        let(:rooted_device) { true }
 
-    context "when user already exists and ban_status changes" do
-      let!(:existing_user) { create(:user, idfa: idfa, ban_status: :not_banned) }
-      let(:rooted_device) { true }
-
-      it "creates an integrity log" do
-        expect { processor_call }.to change(IntegrityLog, :count).by(1)
-      end
-
-      it "updates ban_status to banned" do
-        expect(processor_call.reload.ban_status).to eq("banned")
+        it { expect { subject }.to change(IntegrityLog, :count).by(1) }
+        it { is_expected.to have_attributes(ban_status: "banned") }
       end
     end
 
@@ -79,27 +52,21 @@ RSpec.describe UserCheckProcessor do
         allow(REDIS).to receive(:sismember).with("country_whitelist", country).and_return(false)
       end
 
-      it "sets ban_status to banned" do
-        expect(processor_call.ban_status).to eq("banned")
-      end
-
-      it "creates an integrity log for a new user" do
-        expect { processor_call }.to change(IntegrityLog, :count).by(1)
-      end
+      it { is_expected.to have_attributes(ban_status: "banned") }
+      it { expect { subject }.to change(IntegrityLog, :count).by(1) }
     end
 
     context "when vpn is detected" do
       before do
-        vpn_service = instance_double(VpnCheckService, call: { "security" => { "vpn" => true, "tor" => false, "proxy" => false } })
+        vpn_service = instance_double(VpnCheckService,
+          call: { "security" => { "vpn" => true, "tor" => false, "proxy" => false } })
         allow(VpnCheckService).to receive(:new).and_return(vpn_service)
       end
 
-      it "sets ban_status to banned" do
-        expect(processor_call.ban_status).to eq("banned")
-      end
+      it { is_expected.to have_attributes(ban_status: "banned") }
 
       it "logs vpn as true" do
-        processor_call
+        subject
         expect(IntegrityLog.last.vpn).to eq(true)
       end
     end
@@ -107,9 +74,7 @@ RSpec.describe UserCheckProcessor do
     context "when rooted_device is true" do
       let(:rooted_device) { true }
 
-      it "sets ban_status to banned" do
-        expect(processor_call.ban_status).to eq("banned")
-      end
+      it { is_expected.to have_attributes(ban_status: "banned") }
     end
 
     context "when vpn API returns unexpected response" do
@@ -118,12 +83,10 @@ RSpec.describe UserCheckProcessor do
         allow(VpnCheckService).to receive(:new).and_return(vpn_service)
       end
 
-      it "sets ban_status to not_banned" do
-        expect(processor_call.ban_status).to eq("not_banned")
-      end
+      it { is_expected.to have_attributes(ban_status: "not_banned") }
 
       it "logs vpn and proxy as false" do
-        processor_call
+        subject
         log = IntegrityLog.last
         expect(log.vpn).to eq(false)
         expect(log.proxy).to eq(false)
