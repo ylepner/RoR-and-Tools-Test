@@ -49,9 +49,9 @@ group :development, :test do
 
   # Omakase Ruby styling [https://github.com/rails/rubocop-rails-omakase/]
   gem "rubocop-rails-omakase", require: false
-
-  gem "redis", "~> 5.4"
 end
+
+gem "redis", "~> 5.4"
 
 gem "rspec-rails", "~> 8.0", groups: [ :development, :test ]
 

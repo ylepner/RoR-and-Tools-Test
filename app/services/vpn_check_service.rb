@@ -9,14 +9,9 @@ class VpnCheckService
   end
 
   def call
-    cached = REDIS.get(cache_key)
-    return JSON.parse(cached) if cached
-
-    response = fetch_from_api
-
-    REDIS.setex(cache_key, 24.hours.to_i, response.to_json)
-
-    response
+    Rails.cache.fetch(cache_key, expires_in: 24.hours) do
+      fetch_from_api
+    end
   rescue StandardError => e
     Rails.logger.warn("VpnCheckService failed for #{@ip}: #{e.message}")
     fallback

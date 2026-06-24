@@ -18,9 +18,6 @@ class UserCheckService
   private
 
   def country_allowed?
-    country = @country.to_s.strip.upcase
-    return false if country.empty?
-
-    REDIS.sismember("country_whitelist", country)
+    CountryWhitelistStore.new.allowed?(@country)
   end
 end
