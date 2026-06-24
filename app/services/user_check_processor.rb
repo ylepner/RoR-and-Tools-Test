@@ -8,6 +8,7 @@ class UserCheckProcessor
 
   def call
     resolve_user
+    return @user if @user.banned?
     check_vpn
     determine_ban_status
     save_user

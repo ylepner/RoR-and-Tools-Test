@@ -7,7 +7,6 @@ class UserCheckService
   end
 
   def call
-    return :banned if @user&.banned?
     return :banned unless country_allowed?
     return :banned if @rooted_device
     return :banned if @vpn
