@@ -1,4 +1,4 @@
-class IntegrityLogAdapter
+class IntegrityLogActiveRecordAdapter
   def create(idfa:, ban_status:, ip:, country:, rooted_device:, vpn:, proxy:)
     IntegrityLog.create!(
       idfa: idfa,

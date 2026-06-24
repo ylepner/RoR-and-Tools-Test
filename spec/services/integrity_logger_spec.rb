@@ -1,6 +1,12 @@
 require 'rails_helper'
 
 RSpec.describe IntegrityLogger do
+  after do
+    IntegrityLogger.config do |c|
+      c.adapter = IntegrityLogActiveRecordAdapter.new
+    end
+  end
+
   describe "#call" do
     let(:user) { create(:user) }
     let(:ip) { "192.168.1.1" }
@@ -60,7 +66,11 @@ RSpec.describe IntegrityLogger do
     end
 
     context "with a custom adapter" do
-      let(:adapter) { instance_double(IntegrityLogAdapter) }
+      let(:custom_adapter) { instance_double(IntegrityLogActiveRecordAdapter) }
+
+      before do
+        IntegrityLogger.config { |c| c.adapter = custom_adapter }
+      end
 
       subject(:logger_call) do
         described_class.new(
@@ -69,13 +79,12 @@ RSpec.describe IntegrityLogger do
           country: country,
           rooted_device: rooted_device,
           vpn: vpn,
-          proxy: proxy,
-          adapter: adapter
+          proxy: proxy
         ).call
       end
 
       it "delegates create to the adapter" do
-        expect(adapter).to receive(:create).with(
+        expect(custom_adapter).to receive(:create).with(
           idfa: user.idfa,
           ban_status: "not_banned",
           ip: ip,
